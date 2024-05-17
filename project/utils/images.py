@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils.data_transforms import NormalizeInverse
-
+from project.utils.data_transforms import NormalizeInverse
+from project.data.config import TRAIN_MEAN, TRAIN_STD
 
 def imshow(img, ax, mean=TRAIN_MEAN, std=TRAIN_STD):
     unormalize = NormalizeInverse(mean, std)

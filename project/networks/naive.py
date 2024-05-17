@@ -8,28 +8,46 @@ import torchvision.transforms as transforms
 import numpy as np
 from tqdm import tqdm
 
-from exercise_code.data.image_folder_dataset import MemoryImageFolderDataset
 
 class NaiveModel(nn.Module):
-    
-    def __init__(self, hparams):
+    """
+    Simple Fully Convulutional Network
+    """
+    def __init__(self, hparams={}):
         super().__init__()
 
         # set hyperparams
         self.hparams = hparams
-        self.loss = hparams['loss']
+        self.loss = hparams['loss'] if 'loss' in hparams else nn.CrossEntropyLoss()
         self.device = hparams['dev']
 
         self.model = nn.Sequential(
-            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
-            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
-            nn.Conv2d(16, 64, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(512, 512, kernel_size=3, groups=512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(512, 2048, kernel_size=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(2048, 1024, kernel_size=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(1024, 2, kernel_size=1),
+            nn.Sigmoid()
         )
 
     def forward(self, x):
@@ -77,21 +95,6 @@ class NaiveModel(nn.Module):
         self.log('val_loss',avg_loss)
         self.log('val_acc',acc)
         return {'val_loss': avg_loss, 'val_acc': acc}
-
-    def configure_optimizers(self):
-
-        optim = None
-        ########################################################################
-        # TODO: Define your optimizer.                                         #
-        ########################################################################
-
-
-        pass
-
-        ########################################################################
-        #                           END OF YOUR CODE                           #
-        ########################################################################
-        return optim
 
     def getTestAcc(self, loader):
         self.model.eval()

@@ -1,103 +1,69 @@
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
 
 import torchvision
-import torchvision.transforms as transforms
+
+from project.data.memory_dataset import MemoryDataset
 
 import numpy as np
+import os
+
+from .config import TRAIN_MEAN, TRAIN_STD
 
 class DataModule(nn.Module):
     def __init__(self, hparams):
         super().__init__()
         self.opt = hparams
-        if 'loading_method' not in hparams.keys():
-            self.opt['loading_method'] = 'Image'
         if 'num_workers' not in hparams.keys():
-            self.opt['num_workers'] = 2
+            self.opt['num_workers'] = 8
+        if 'load_method' not in hparams.keys():
+            self.opt['load_method'] = 'image'
+        self.prepare_data()
 
-    def prepare_data(self, stage=None, ROOT="../../watermark/data"):
-        mean = [140.562, 133.033, 124.148] 
-        std = [60.562, 61.536, 65.176]
+    def prepare_data(self, ROOT="dataset/", transforms=None):
+        if transforms == None:
+            transforms = torchvision.transforms.Compose([
+                torchvision.transforms.ToTensor(), 
+                torchvision.transforms.Normalize(TRAIN_MEAN, TRAIN_STD)
+            ])
 
-        augmented_transform = transforms.Compose([
-            transforms.ToTensor(), 
-            transforms.Normalize(mean, std)
-        ])
-        # Make sure to use a consistent transform for validation/test
-        safe_transform = transforms.Compose([
-            transforms.ToTensor(), 
-            transforms.Normalize(mean, std)
-        ])
-        
-        if self.opt['loading_method'] == 'Image':
-            # Set up a full dataset with the two respective transforms
-            cifar_complete_augmented = torchvision.datasets.ImageFolder(root=ROOT, transform=my_transform)
-            cifar_complete_train_val = torchvision.datasets.ImageFolder(root=ROOT, transform=train_val_transform)
+        dataset_train = torchvision.datasets.ImageFolder(root=os.path.join(ROOT, 'train'), transform=transforms)
+        dataset_valid = torchvision.datasets.ImageFolder(root=os.path.join(ROOT, 'valid'), transform=transforms)
+        dataset_test = torchvision.datasets.ImageFolder(root=os.path.join(ROOT, 'test'), transform=transforms)
 
-            # Instead of splitting the dataset in the beginning you can also 
-            # split using a sampler. This is not better, but we wanted to 
-            # show it off here as an example by using the default
-            # ImageFolder dataset :)
+        if 'load_method' == 'memory':
+            dataset_train = MemoryDataset(dataset=dataset_train)
+            dataset_valid = MemoryDataset(dataset=dataset_valid)
+            dataset_test = MemoryDataset(dataset=dataset_test)
 
-            # First regular splitting which we did for you before
-            N = len(cifar_complete_augmented)        
-            num_train, num_val = int(N*split['train']), int(N*split['val'])
-            indices = np.random.permutation(N)
-            train_idx, val_idx, test_idx = indices[:num_train], indices[num_train:num_train+num_val], indices[num_train+num_val:]
+        self.dataset = {
+            'train': dataset_train,
+            'valid': dataset_valid,
+            'test': dataset_test
+        }
 
-            # Now we can set the sampler via the respective subsets
-            train_sampler = SubsetRandomSampler(train_idx)
-            val_sampler = SubsetRandomSampler(val_idx)
-            test_sampler= SubsetRandomSampler(test_idx)
-            self.sampler = {"train": train_sampler, "val": val_sampler, "test": test_sampler}
-
-            # assign to use in dataloaders
-            self.dataset = {}
-            self.dataset["train"], self.dataset["val"], self.dataset["test"] = cifar_complete_augmented,\
-                cifar_complete_train_val, cifar_complete_train_val
-
-        elif self.opt['loading_method'] == 'Memory':
-            self.dataset = {}
-            self.sampler = {}
-
-            for mode in ['train', 'val', 'test']:
-                # Set transforms
-                if mode == 'train':
-                    transform = my_transform
-                else:
-                    transform = train_val_transform
-
-                self.dataset[mode] = MemoryImageFolderDataset(
-                    root = CIFAR_ROOT,
-                    transform = transform,
-                    mode = mode,
-                    split = split
-                )
-        else:
-            raise NotImplementedError("Wrong loading method")
-
-    def return_dataloader_dict(self, mode):
+    def get_dataloader_args(self, set):
         arg_dict = {
-            'batch_size': self.opt["batch_size"],
+            'batch_size': self.opt['batch_size'],
             'num_workers': self.opt['num_workers'],
             'persistent_workers': True,
-            'pin_memory': True
+            'pin_memory': True,
+            'shuffle': True if set == 'train' else False
         }
-        if self.opt['loading_method'] == 'Image':
-            arg_dict['sampler'] = self.sampler[mode]
-        elif self.opt['loading_method'] == 'Memory':
-            arg_dict['shuffle'] = True if mode == 'train' else False
+
         return arg_dict
-
-    def train_dataloader(self):
-        arg_dict = self.return_dataloader_dict('train')
-        return DataLoader(self.dataset["train"], **arg_dict)
-
-    def val_dataloader(self):
-        arg_dict = self.return_dataloader_dict('val')
-        return DataLoader(self.dataset["val"], **arg_dict)
     
-    def test_dataloader(self):
-        arg_dict = self.return_dataloader_dict('train')
-        return DataLoader(self.dataset["train"], **arg_dict)
+    def get_idx_to_class_dict(self):
+        return {idx : c for c, idx in self.dataset['train'].class_to_idx.items()}
+
+    def get_train_dataloader(self):
+        args = self.get_dataloader_args('train')
+        return DataLoader(self.dataset['train'], **args)
+
+    def get_valid_dataloader(self):
+        args = self.get_dataloader_args('valid')
+        return DataLoader(self.dataset['valid'], **args)
+    
+    def get_test_dataloader(self):
+        args = self.get_dataloader_args('test')
+        return DataLoader(self.dataset['test'], **args)
