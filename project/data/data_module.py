@@ -8,10 +8,10 @@ from project.data.memory_dataset import MemoryDataset
 import numpy as np
 import os
 
-from .config import TRAIN_MEAN, TRAIN_STD
+from .settings import TRAIN_MEAN, TRAIN_STD
 
 class DataModule(nn.Module):
-    def __init__(self, hparams):
+    def __init__(self, hparams: dict):
         super().__init__()
         self.opt = hparams
         if 'num_workers' not in hparams.keys():
@@ -20,7 +20,7 @@ class DataModule(nn.Module):
             self.opt['load_method'] = 'image'
         self.prepare_data()
 
-    def prepare_data(self, ROOT="dataset/", transforms=None):
+    def prepare_data(self, ROOT="dataset/", transforms: torchvision.transforms.Compose = None):
         if transforms == None:
             transforms = torchvision.transforms.Compose([
                 torchvision.transforms.ToTensor(), 
@@ -42,7 +42,7 @@ class DataModule(nn.Module):
             'test': dataset_test
         }
 
-    def get_dataloader_args(self, set):
+    def get_dataloader_args(self, set: str):
         arg_dict = {
             'batch_size': self.opt['batch_size'],
             'num_workers': self.opt['num_workers'],

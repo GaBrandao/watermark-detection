@@ -1,7 +1,7 @@
-import torch
+from torch.utils.data import Dataset
 
-class MemoryDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset):
+class MemoryDataset(Dataset):
+    def __init__(self, dataset: Dataset):
         self.data = []
         for image, label in dataset:
             self.data.append((image, label))
