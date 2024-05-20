@@ -20,7 +20,7 @@ class DataModule(nn.Module):
             self.opt['load_method'] = 'image'
         self.prepare_data()
 
-    def prepare_data(self, ROOT="dataset/", transforms: torchvision.transforms.Compose = None):
+    def prepare_data(self, ROOT="dataset", transforms: torchvision.transforms.Compose = None):
         if transforms == None:
             transforms = torchvision.transforms.Compose([
                 torchvision.transforms.ToTensor(), 
