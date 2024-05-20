@@ -9,9 +9,7 @@ from project.data.data_module import DataModule
 
 try:
     import torch_xla.core.xla_model as xm
-    import torch_xla as xla
 except ImportError:
-    xla = None
     xm = None
 
 def create_tqdm_bar(iterable, desc):
@@ -25,9 +23,15 @@ def train_model(model, data_module : DataModule, loss_func, logger, hparams):
     loss_cutoff = len(train_dataloader) // 10
     optimizer = torch.optim.Adam(model.parameters(), hparams['learning_rate'])
 
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = xm.xla_device()
+
+    model.to(device)
+
     model_name = model._get_name()
     epochs = hparams['epochs']
-    device = hparams['device']
 
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(epochs * len(train_dataloader) / 5), gamma=hparams.get('gamma', 0.8))
 

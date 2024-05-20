@@ -1,6 +1,9 @@
 dataset/
+
 logs/*
 !logs/settings.py
+
+.ipynb_checkpoints/
 
 *.cpython*
 .DS_Store

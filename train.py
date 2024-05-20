@@ -3,10 +3,9 @@ import os
 import torch
 import torch.nn as nn
 try:
-    import torch_xla.core.xla_model as xm
     import torch_xla.distributed.xla_multiprocessing as xmp
 except ImportError:
-    xm = None
+    xmp = None
 
 from settings import hparams
 from project.data.data_module import DataModule
@@ -21,17 +20,9 @@ from torch.utils.tensorboard import SummaryWriter
 from logs.settings import LOGS_ROOT
 
 if __name__ == '__main__':
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = xm.xla_device()
-
-    print('Current device:', device)
-
-    hparams['device'] = device
     data_module = DataModule(hparams)
 
-    naive_model = NaiveModel(hparams=hparams).to(device)
+    naive_model = NaiveModel(hparams=hparams)
     naive_model.apply(init_weights)
 
     print('# Parameters: ', number_of_parameters(naive_model))
