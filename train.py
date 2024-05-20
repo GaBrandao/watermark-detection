@@ -39,7 +39,8 @@ def train_model(model, args):
     train_loader = data_module.get_loader('train')
     valid_loader = data_module.get_loader('valid')
 
-    accelerator.init_trackers(get_writer_path(model_name), config=hparams)
+    logs_path = get_writer_path(model_name)
+    accelerator.init_trackers(model_name, config=hparams, logging_dir=logs_path)
 
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=hparams['learning_rate'])
 
