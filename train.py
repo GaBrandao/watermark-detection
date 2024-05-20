@@ -2,15 +2,16 @@ import torch
 import torch.nn as nn
 
 import numpy as np
-from tqdm.auto import tqdm
 import os
 
 from accelerate import Accelerator
-import transformers
-from transformers import (
-    AdamW,
-    get_linear_schedule_with_warmup
+from accelerate.utils import (
+    LoggerType,
+    tqdm
 )
+import transformers
+from transformers import get_linear_schedule_with_warmup
+
 
 from settings import hparams
 from project.data.data_module import DataModule
@@ -19,16 +20,12 @@ from project.utils.models import init_weights
 from project.logger.writer import get_summary_writer
 
 os.environ["KAGGLE_TPU"] = "yes" # adding a fake env to launch on TPUs
+os.environ["TPU_NAME"] = "dummy"
 # make the TPU available accelerator to torch-xla
 os.environ["XRT_TPU_CONFIG"]="localservice;0;localhost:51011"
 
-def create_tqdm_bar(iterable, desc):
-    return tqdm(enumerate(iterable),total=len(iterable), ncols=100, desc=desc)
-
 def train_model(model, args):
-    accelerator = Accelerator()
-
-    name = model._get_name()
+    accelerator = Accelerator(log_with=['wandb', LoggerType.TENSORBOARD])
 
     if accelerator.is_main_process:
         transformers.utils.logging.set_verbosity_info()
@@ -42,9 +39,9 @@ def train_model(model, args):
     train_loader = data_module.get_loader('train')
     valid_loader = data_module.get_loader('valid')
 
-    logger = get_summary_writer(model)
+    accelerator.init_trackers(model_name, config=hparams)
 
-    optimizer = AdamW(params=model.parameters(), lr=hparams['learning_rate'])
+    optimizer = torch.optim.AdamW(params=model.parameters(), lr=hparams['learning_rate'])
 
     model_name = model._get_name()
     epochs = hparams['epochs']
@@ -53,13 +50,15 @@ def train_model(model, args):
         model, optimizer, train_loader, valid_loader
     )
 
+    device = accelerator.device
+
     scheduler = get_linear_schedule_with_warmup(
         optimizer=optimizer, 
         num_warmup_steps=100,
         num_training_steps=len(train_loader) * epochs
     )
 
-    progress_bar = tqdm(range(epochs * len(train_loader)), disable=not accelerator.is_main_process)
+    progress_bar = tqdm(range(epochs * len(train_loader)))
 
     for epoch in range(epochs):
         model.train() 
@@ -73,25 +72,22 @@ def train_model(model, args):
             accelerator.backward(loss)
             optimizer.step()
             scheduler.step()
+            optimizer.zero_grad()
 
-            logger.add_scalar(f'model_{name}/train_loss', loss.item(), epoch * len(train_loader) + iter)
+            accelerator.log({f'model_{model_name}/train_loss': loss.item()}, step=iter)
             progress_bar.update(1)
-            
 
         model.eval()
-        validation_loss = []
-
         for iter, batch in enumerate(valid_loader):
             with torch.no_grad():
                 images, labels = batch
                 pred = model(images)
             loss = loss_func(pred, labels.float())
-            validation_loss.append(accelerator.gather(loss.item()))
+            loss = accelerator.gather_for_metrics(loss.item())
 
-            logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + iter)
+            accelerator.log({f'model_{model_name}/valid_loss': loss}, step=iter)
 
-        validation_loss = torch.cat(validation_loss)[:len(valid_loader)]
-        accelerator.print(f'Epoch {epoch}: validation_loss - ', torch.mean(validation_loss).item())
+        accelerator.end_training()
     return model
 
 if __name__ == '__main__':
