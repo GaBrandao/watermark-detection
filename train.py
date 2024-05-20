@@ -59,7 +59,7 @@ def train_model(model, args):
         num_training_steps=len(train_loader) * epochs
     )
 
-    progress_bar = tqdm(range(epochs * len(train_loader)), disable=not accelerator.m)
+    progress_bar = tqdm(range(epochs * len(train_loader)), disable=not accelerator.is_main_process())
 
     for epoch in range(epochs):
         model.train() 
