@@ -1,4 +1,6 @@
 dataset/
+logs/*
+!logs/settings.py
 
 *.cpython*
 .DS_Store
