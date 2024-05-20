@@ -38,7 +38,7 @@ def train_model(model, data_module : DataModule, loss_func, logger, hparams):
             images, labels = images.to(device), labels.to(device)
 
             pred = model(images) 
-            loss = loss_func(pred, labels)
+            loss = loss_func(pred, labels.float())
             
             loss.backward()  
             optimizer.step() 
@@ -62,7 +62,7 @@ def train_model(model, data_module : DataModule, loss_func, logger, hparams):
                 images, labels = images.to(device), labels.to(device)
 
                 pred = model(images)
-                loss = loss_func(pred, labels)
+                loss = loss_func(pred, labels.float())
                 validation_loss.append(loss.item())
 
                 val_loop.set_postfix(val_loss = "{:.8f}".format(np.mean(validation_loss)))

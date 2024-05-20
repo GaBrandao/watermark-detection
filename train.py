@@ -1,0 +1,54 @@
+import os
+import matplotlib.pyplot as plt
+
+import torch
+import torch.nn as nn
+try:
+    import torch_xla.core.xla_model as xm
+except ImportError:
+    xm = None
+
+import numpy as np
+
+%load_ext autoreload
+%autoreload 2
+
+os.environ['KMP_DUPLICATE_LIB_OK']='True' # To prevent the kernel from dying.
+
+from settings import hparams
+from project.data.data_module import DataModule
+
+from project.networks.naive import NaiveModel
+from project.utils.models import init_weights, number_of_parameters
+
+from project.training import train_model
+
+from torch.utils.tensorboard import SummaryWriter
+
+from logs.settings import LOGS_ROOT
+
+if __name__ == '__main__':
+    data_module = DataModule(hparams)
+
+    device = hparams['device']
+
+    naive_model = NaiveModel(hparams=hparams).to(device)
+    naive_model.apply(init_weights)
+
+    print('# Parameters: ', number_of_parameters(naive_model))
+
+    logs_path = os.path.join(LOGS_ROOT, naive_model._get_name())
+
+    num_of_runs = len(os.listdir(logs_path)) if os.path.exists(logs_path) else 0
+
+    logs_path = os.path.join(logs_path, f'run_{num_of_runs + 1}')
+    logger = SummaryWriter(logs_path)
+
+    loss = nn.BCELoss()
+
+    train_model(naive_model, data_module, loss, logger, hparams)
+
+    test_dataloader = data_module.get_test_dataloader()
+
+    print(f"Training Acc: {naive_model.get_accuracy(test_dataloader)[1] * 100}%")
+    print(f"Validation Acc: {naive_model.get_accuracy(test_dataloader)[1] * 100}%")
