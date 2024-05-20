@@ -63,7 +63,7 @@ def train_model(index):
         for images, labels in train_loader:# train_iteration, batch in training_loop:
             iter += 1
             optimizer.zero_grad() 
-            images, labels = batch 
+
             images, labels = images.to(device), labels.to(device)
 
             pred = model(images) 
@@ -85,6 +85,8 @@ def train_model(index):
             # )
 
             logger.add_scalar(f'classifier_{model_name}/train_loss', loss.item(), epoch * len(train_loader) + iter)
+        
+        print(f'train epoch {epoch}: average_loss:{np.mean(training_loss):.8f}"')
 
         model.eval()
         # val_loop = create_tqdm_bar(valid_loader, desc=f'Validation Epoch [{epoch + 1}/{hparams["epochs"]}]')
@@ -93,6 +95,7 @@ def train_model(index):
             iter = 0
             for images, labels in valid_loader:# for val_iteration, batch in val_loop:
                 iter += 1
+
                 images, labels = images.to(device), labels.to(device)
 
                 pred = model(images)
@@ -102,6 +105,8 @@ def train_model(index):
                 # val_loop.set_postfix(val_loss = "{:.8f}".format(np.mean(validation_loss)))
 
                 logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + iter)
+        print(f'valid epoch {epoch}: average_loss:{np.mean(training_loss):.8f}"')
+            
 
     return model
 
