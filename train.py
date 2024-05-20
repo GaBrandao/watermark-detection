@@ -25,7 +25,7 @@ os.environ["XRT_TPU_CONFIG"]="localservice;0;localhost:51011"
 def create_tqdm_bar(iterable, desc):
     return tqdm(enumerate(iterable),total=len(iterable), ncols=100, desc=desc)
 
-def train_model(model, hparams=hparams):
+def train_model(model, args):
     accelerator = Accelerator()
 
     name = model._get_name()
@@ -98,8 +98,7 @@ if __name__ == '__main__':
     naive_model = NaiveModel(hparams=hparams)
     naive_model.apply(init_weights)
 
-    args = (naive_model, hparams)
-    train_model(naive_model, args)
+    train_model(naive_model, hparams)
 
     # train_dataloader = data_module.get_train_dataloader()
     # test_dataloader = data_module.get_test_dataloader()
