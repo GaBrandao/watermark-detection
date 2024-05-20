@@ -8,11 +8,6 @@ try:
 except ImportError:
     xm = None
 
-import numpy as np
-
-%load_ext autoreload
-%autoreload 2
-
 os.environ['KMP_DUPLICATE_LIB_OK']='True' # To prevent the kernel from dying.
 
 from settings import hparams
@@ -28,9 +23,15 @@ from torch.utils.tensorboard import SummaryWriter
 from logs.settings import LOGS_ROOT
 
 if __name__ == '__main__':
-    data_module = DataModule(hparams)
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = xm.xla_device()
 
-    device = hparams['device']
+    print('Current device:', device)
+
+    hparams['device'] = device
+    data_module = DataModule(hparams)
 
     naive_model = NaiveModel(hparams=hparams).to(device)
     naive_model.apply(init_weights)
