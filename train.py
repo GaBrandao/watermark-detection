@@ -58,8 +58,8 @@ def train_model(index):
         training_loss = []
         validation_loss = []
 
-        training_loop = create_tqdm_bar(train_loader, desc=f'Training Epoch [{epoch + 1}/{epochs}]')
-        for train_iteration, batch in training_loop:
+        # training_loop = create_tqdm_bar(train_loader, desc=f'Training Epoch [{epoch + 1}/{epochs}]')
+        for images, labels in train_loader:# train_iteration, batch in training_loop:
             optimizer.zero_grad() 
             images, labels = batch 
             images, labels = images.to(device), labels.to(device)
@@ -78,9 +78,9 @@ def train_model(index):
             training_loss.append(loss.item())
             training_loss = training_loss[-loss_cutoff:]
 
-            training_loop.set_postfix(curr_train_loss = "{:.8f}".format(np.mean(training_loss)),
-                                      lr = "{:.8f}".format(optimizer.param_groups[0]['lr'])
-            )
+            # training_loop.set_postfix(curr_train_loss = "{:.8f}".format(np.mean(training_loss)),
+            #                           lr = "{:.8f}".format(optimizer.param_groups[0]['lr'])
+            # )
 
             logger.add_scalar(f'classifier_{model_name}/train_loss', loss.item(), epoch * len(train_loader) + train_iteration)
 
