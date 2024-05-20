@@ -17,7 +17,7 @@ from settings import hparams
 from project.data.data_module import DataModule
 from project.networks.naive import NaiveModel
 from project.utils.models import init_weights
-from project.logger.writer import get_summary_writer
+from project.logger.writer import get_writer_path
 
 os.environ["KAGGLE_TPU"] = "yes" # adding a fake env to launch on TPUs
 os.environ["TPU_NAME"] = "dummy"
@@ -39,7 +39,7 @@ def train_model(model, args):
     train_loader = data_module.get_loader('train')
     valid_loader = data_module.get_loader('valid')
 
-    accelerator.init_trackers(model_name, config=hparams)
+    accelerator.init_trackers(get_writer_path(model_name), config=hparams)
 
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=hparams['learning_rate'])
 
