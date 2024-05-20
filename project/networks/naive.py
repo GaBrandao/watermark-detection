@@ -12,7 +12,6 @@ class NaiveModel(nn.Module):
     def __init__(self, hparams: dict = {}):
         super().__init__()
 
-        self.device = hparams['device']
         self.hparam = hparams
 
         self.model = nn.Sequential(
@@ -92,7 +91,6 @@ class NaiveModel(nn.Module):
 
     def get_accuracy(self, dataloader):
         self.model.eval()
-        self.model = self.model.to(self.device)
 
         scores = []
         labels = []
