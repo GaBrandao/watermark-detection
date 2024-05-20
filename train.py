@@ -3,6 +3,7 @@ import torch.nn as nn
 
 import numpy as np
 from tqdm.auto import tqdm
+import os
 
 from accelerate import Accelerator
 import transformers
@@ -17,10 +18,14 @@ from project.networks.naive import NaiveModel
 from project.utils.models import init_weights
 from project.logger.writer import get_summary_writer
 
+os.environ["KAGGLE_TPU"] = "yes" # adding a fake env to launch on TPUs
+# make the TPU available accelerator to torch-xla
+os.environ["XRT_TPU_CONFIG"]="localservice;0;localhost:51011"
+
 def create_tqdm_bar(iterable, desc):
     return tqdm(enumerate(iterable),total=len(iterable), ncols=100, desc=desc)
 
-def train_model(model, hparams=hparams, metric):
+def train_model(model, hparams=hparams):
     accelerator = Accelerator()
 
     name = model._get_name()
@@ -43,6 +48,10 @@ def train_model(model, hparams=hparams, metric):
 
     model_name = model._get_name()
     epochs = hparams['epochs']
+    
+    model, optimizer, train_loader, valid_loader = accelerator.prepare(
+        model, optimizer, train_loader, valid_loader
+    )
 
     scheduler = get_linear_schedule_with_warmup(
         optimizer=optimizer, 
@@ -54,20 +63,20 @@ def train_model(model, hparams=hparams, metric):
 
     for epoch in range(epochs):
         model.train() 
-        training_loss = []
+        
         for iter, batch in enumerate(train_loader):
             images, labels = batch
 
             pred = model(images) 
             loss = loss_func(pred, labels.float())
             
-            loss.backward()
+            accelerator.backward(loss)
             optimizer.step()
-            scheduler.step() 
+            scheduler.step()
 
             logger.add_scalar(f'model_{name}/train_loss', loss.item(), epoch * len(train_loader) + iter)
-
-            optimizer.zero_grad()
+            progress_bar.update(1)
+            
 
         model.eval()
         validation_loss = []
@@ -76,19 +85,20 @@ def train_model(model, hparams=hparams, metric):
             with torch.no_grad():
                 images, labels = batch
                 pred = model(images)
+            loss = loss_func(pred, labels.float())
+            validation_loss.append(accelerator.gather(loss.item()))
 
-                loss = loss_func(pred, labels.float())
+            logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + iter)
 
-                logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + iter)
-        
-            
-
+        validation_loss = torch.cat(validation_loss)[:len(valid_loader)]
+        accelerator.print(f'Epoch {epoch}: validation_loss - ', torch.mean(validation_loss).item())
     return model
 
 if __name__ == '__main__':
     naive_model = NaiveModel(hparams=hparams)
     naive_model.apply(init_weights)
 
+    args = (naive_model, hparams)
     train_model()
 
     # train_dataloader = data_module.get_train_dataloader()
