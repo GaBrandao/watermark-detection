@@ -7,6 +7,12 @@ import numpy as np
 
 from project.data.data_module import DataModule
 
+try:
+    import torch_xla.core.xla_model as xm
+    import torch_xla as xla
+except ImportError:
+    xla = None
+    xm = None
 
 def create_tqdm_bar(iterable, desc):
     return tqdm(enumerate(iterable),total=len(iterable), ncols=150, desc=desc)
@@ -41,7 +47,11 @@ def train_model(model, data_module : DataModule, loss_func, logger, hparams):
             loss = loss_func(pred, labels.float())
             
             loss.backward()  
-            optimizer.step() 
+
+            if xm is not None:
+                xm.optimizer_step(optimizer)
+            else:
+                optimizer.step() 
             # scheduler.step() 
 
             training_loss.append(loss.item())

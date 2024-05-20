@@ -1,14 +1,12 @@
 import os
-import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
 try:
     import torch_xla.core.xla_model as xm
+    import torch_xla.distributed.xla_multiprocessing as xmp
 except ImportError:
     xm = None
-
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # To prevent the kernel from dying.
 
 from settings import hparams
 from project.data.data_module import DataModule
@@ -47,8 +45,12 @@ if __name__ == '__main__':
 
     loss = nn.BCELoss()
 
-    train_model(naive_model, data_module, loss, logger, hparams)
+    if xmp is not None:
+        xmp.spawn(train_model, args=(naive_model, data_module, loss, logger, hparams))
+    else:
+        train_model(naive_model, data_module, loss, logger, hparams)
 
+    train_dataloader = data_module.get_train_dataloader()
     test_dataloader = data_module.get_test_dataloader()
 
     print(f"Training Acc: {naive_model.get_accuracy(test_dataloader)[1] * 100}%")

@@ -107,7 +107,7 @@ class NaiveModel(nn.Module):
         scores = np.concatenate(scores, axis=0)
         labels = np.concatenate(labels, axis=0)
 
-        preds = scores.argmax(axis=1)
+        preds = np.where(scores > 0.5, 1, 0)
         acc = (labels == preds).mean()
         return preds, acc
 
