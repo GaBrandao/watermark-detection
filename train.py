@@ -99,7 +99,7 @@ if __name__ == '__main__':
     naive_model.apply(init_weights)
 
     args = (naive_model, hparams)
-    train_model()
+    train_model(naive_model, args)
 
     # train_dataloader = data_module.get_train_dataloader()
     # test_dataloader = data_module.get_test_dataloader()
