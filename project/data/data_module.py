@@ -56,14 +56,6 @@ class DataModule(nn.Module):
     def get_idx_to_class_dict(self):
         return {idx : c for c, idx in self.dataset['train'].class_to_idx.items()}
 
-    def get_train_dataloader(self):
-        args = self.get_dataloader_args('train')
-        return DataLoader(self.dataset['train'], **args)
-
-    def get_valid_dataloader(self):
-        args = self.get_dataloader_args('valid')
-        return DataLoader(self.dataset['valid'], **args)
-    
-    def get_test_dataloader(self):
-        args = self.get_dataloader_args('test')
-        return DataLoader(self.dataset['test'], **args)
+    def get_loader(self, set: str):
+        args = self.get_dataloader_args(set)
+        return DataLoader(self.dataset[set], **args)
