@@ -59,7 +59,9 @@ def train_model(index):
         validation_loss = []
 
         # training_loop = create_tqdm_bar(train_loader, desc=f'Training Epoch [{epoch + 1}/{epochs}]')
+        iter = 0
         for images, labels in train_loader:# train_iteration, batch in training_loop:
+            iter += 1
             optimizer.zero_grad() 
             images, labels = batch 
             images, labels = images.to(device), labels.to(device)
@@ -82,23 +84,24 @@ def train_model(index):
             #                           lr = "{:.8f}".format(optimizer.param_groups[0]['lr'])
             # )
 
-            logger.add_scalar(f'classifier_{model_name}/train_loss', loss.item(), epoch * len(train_loader) + train_iteration)
+            logger.add_scalar(f'classifier_{model_name}/train_loss', loss.item(), epoch * len(train_loader) + iter)
 
         model.eval()
-        val_loop = create_tqdm_bar(valid_loader, desc=f'Validation Epoch [{epoch + 1}/{hparams["epochs"]}]')
+        # val_loop = create_tqdm_bar(valid_loader, desc=f'Validation Epoch [{epoch + 1}/{hparams["epochs"]}]')
 
         with torch.no_grad():
-            for val_iteration, batch in val_loop:
-                images, labels = batch
+            iter = 0
+            for images, labels in valid_loader:# for val_iteration, batch in val_loop:
+                iter += 1
                 images, labels = images.to(device), labels.to(device)
 
                 pred = model(images)
                 loss = loss_func(pred, labels.float())
                 validation_loss.append(loss.item())
 
-                val_loop.set_postfix(val_loss = "{:.8f}".format(np.mean(validation_loss)))
+                # val_loop.set_postfix(val_loss = "{:.8f}".format(np.mean(validation_loss)))
 
-                logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + val_iteration)
+                logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + iter)
 
     return model
 
