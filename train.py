@@ -20,7 +20,7 @@ from project.logger.writer import get_summary_writer
 def create_tqdm_bar(iterable, desc):
     return tqdm(enumerate(iterable),total=len(iterable), ncols=100, desc=desc)
 
-def train_model():
+def train_model(index):
     data_module = DataModule(hparams)
 
     naive_model = NaiveModel(hparams=hparams)
