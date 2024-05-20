@@ -91,7 +91,7 @@ def train_model():
 
         with torch.no_grad():
             iter = 0
-            for iter, batch, labels in valid_loop:
+            for iter, batch in valid_loop:
                 images, labels = batch
 
                 images, labels = images.to(device), labels.to(device)
