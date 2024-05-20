@@ -33,7 +33,7 @@ def train_model(index):
     train_loader = data_module.get_loader('train')
     valid_loader = data_module.get_loader('valid')
 
-    logger = get_summary_writer()
+    logger = get_summary_writer(model)
 
     loss_cutoff = len(train_loader) // 10
     optimizer = torch.optim.Adam(model.parameters(), hparams['learning_rate'])
