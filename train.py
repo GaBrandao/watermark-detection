@@ -51,7 +51,6 @@ def train_model(model, args):
 
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=hparams['learning_rate'])
 
-    
     epochs = hparams['epochs']
     
     model, optimizer, train_loader, valid_loader = accelerator.prepare(
@@ -73,14 +72,21 @@ def train_model(model, args):
         
         for iter, batch in enumerate(train_loader):
             images, labels = batch
+            print(0)
 
             pred = model(images) 
+            print(1)
             loss = loss_func(pred, labels.float())
+            print(2)
             
             accelerator.backward(loss)
+            print(3)
             optimizer.step()
+            print(4)
             scheduler.step()
+            print(5)
             optimizer.zero_grad()
+            print(6)
 
             accelerator.log({f'model_{model_name}/train_loss': loss.item()}, step=iter)
             progress_bar.update(1)
