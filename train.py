@@ -26,7 +26,9 @@ os.environ["TPU_NAME"] = "dummy"
 os.environ["XRT_TPU_CONFIG"]="localservice;0;localhost:51011"
 
 def train_model(model, args):
-    logs_path = get_writer_path(str(model))
+    logs_path = get_writer_path(model)
+    model_name = model._get_name()
+
     accelerator = Accelerator(
         log_with=TensorBoardTracker(
             run_name=str(model), 
