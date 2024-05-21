@@ -5,6 +5,7 @@ import numpy as np
 import os
 
 from accelerate import Accelerator
+from accelerate.tracking import TensorBoardTracker
 from accelerate.utils import (
     LoggerType,
     tqdm
@@ -25,7 +26,13 @@ os.environ["TPU_NAME"] = "dummy"
 os.environ["XRT_TPU_CONFIG"]="localservice;0;localhost:51011"
 
 def train_model(model, args):
-    accelerator = Accelerator(log_with=['wandb', LoggerType.TENSORBOARD])
+    model_name = model._get_name()
+    logs_path = get_writer_path(model_name)
+    accelerator = Accelerator(
+        log_with=TensorBoardTracker(
+            run_name=model_name, 
+            logging_dir=logs_path
+    ))
 
     if accelerator.is_main_process:
         transformers.utils.logging.set_verbosity_info()
@@ -39,12 +46,11 @@ def train_model(model, args):
     train_loader = data_module.get_loader('train')
     valid_loader = data_module.get_loader('valid')
 
-    logs_path = get_writer_path(model_name)
-    accelerator.init_trackers(model_name, config=hparams, logging_dir=logs_path)
+    accelerator.init_trackers(model_name, config=hparams)
 
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=hparams['learning_rate'])
 
-    model_name = model._get_name()
+    
     epochs = hparams['epochs']
     
     model, optimizer, train_loader, valid_loader = accelerator.prepare(
