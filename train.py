@@ -74,7 +74,7 @@ def train_model(model, args):
             images, labels = batch
 
             pred = model(images) 
-            loss = loss_func(pred, labels.float())
+            loss = loss_func(pred, labels.float()).to(device)
             
             accelerator.backward(loss)
             optimizer.step()
