@@ -26,11 +26,10 @@ os.environ["TPU_NAME"] = "dummy"
 os.environ["XRT_TPU_CONFIG"]="localservice;0;localhost:51011"
 
 def train_model(model, args):
-    model_name = model._get_name()
-    logs_path = get_writer_path(model_name)
+    logs_path = get_writer_path(str(model))
     accelerator = Accelerator(
         log_with=TensorBoardTracker(
-            run_name=model_name, 
+            run_name=str(model), 
             logging_dir=logs_path
     ))
 
@@ -46,7 +45,7 @@ def train_model(model, args):
     train_loader = data_module.get_loader('train')
     valid_loader = data_module.get_loader('valid')
 
-    accelerator.init_trackers(model_name, config=hparams)
+    accelerator.init_trackers(str(model), config=hparams)
 
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=hparams['learning_rate'])
 
