@@ -81,7 +81,7 @@ def train_model(model, args):
             scheduler.step()
             optimizer.zero_grad()
 
-            accelerator.log({f'model_{model_name}/train_loss': loss.item()}, step=iter)
+            accelerator.log({'loss': loss.item()}, step=iter)
             progress_bar.update(1)
 
         model.eval()
