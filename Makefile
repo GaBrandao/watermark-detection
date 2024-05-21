@@ -1,6 +1,6 @@
 all: requirements dataset 
-	export PATH="/home/gabrielalmeida/.local/bin:$PATH"
-	export PJRT_DEVICE=TPU
+	echo PATH="/home/gabrielalmeida/.local/bin:$PATH" > ~/.bashrc
+	echo PJRT_DEVICE=TPU > ~/.bashrc
 
 venv:
 	sudo apt install python3.8-dev python3.8-venv
