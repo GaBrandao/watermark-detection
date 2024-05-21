@@ -68,25 +68,19 @@ def train_model(model, args):
     progress_bar = tqdm(range(epochs * len(train_loader)))
 
     for epoch in range(epochs):
+        accelerator.print(f"epoch")
         model.train() 
         
         for iter, batch in enumerate(train_loader):
             images, labels = batch
-            print(0)
 
             pred = model(images) 
-            print(1)
             loss = loss_func(pred, labels.float())
-            print(2)
             
             accelerator.backward(loss)
-            print(3)
             optimizer.step()
-            print(4)
             scheduler.step()
-            print(5)
             optimizer.zero_grad()
-            print(6)
 
             accelerator.log({f'model_{model_name}/train_loss': loss.item()}, step=iter)
             progress_bar.update(1)
@@ -100,7 +94,7 @@ def train_model(model, args):
             loss = accelerator.gather_for_metrics(loss.item())
 
             accelerator.log({f'model_{model_name}/valid_loss': loss}, step=iter)
-        accelerator.print(f"oi")
+        
     accelerator.end_training()
     return model
 
