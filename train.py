@@ -57,8 +57,6 @@ def train_model(model, args):
         model, optimizer, train_loader, valid_loader
     )
 
-    device = accelerator.device
-
     scheduler = get_linear_schedule_with_warmup(
         optimizer=optimizer, 
         num_warmup_steps=100,
@@ -68,7 +66,6 @@ def train_model(model, args):
     progress_bar = tqdm(range(epochs * len(train_loader)))
 
     for epoch in range(epochs):
-        accelerator.print(f"epoch {epoch}")
         model.train() 
         
         for iter, batch in enumerate(train_loader):
