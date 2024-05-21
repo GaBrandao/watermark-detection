@@ -7,6 +7,7 @@ requirements:
 	pip3 install -r requirements.txt
 
 env:
+	rm -r env
 	apt install python3.8-dev python3.8-venv
 	python3 -m venv env
 	source env/bin/activate
