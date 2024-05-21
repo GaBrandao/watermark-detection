@@ -68,7 +68,7 @@ def train_model(model, args):
     progress_bar = tqdm(range(epochs * len(train_loader)))
 
     for epoch in range(epochs):
-        accelerator.print(f"epoch")
+        accelerator.print(f"epoch", epoch)
         model.train() 
         
         for iter, batch in enumerate(train_loader):
