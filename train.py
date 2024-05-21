@@ -100,8 +100,8 @@ def train_model(model, args):
             loss = accelerator.gather_for_metrics(loss.item())
 
             accelerator.log({f'model_{model_name}/valid_loss': loss}, step=iter)
-
-        accelerator.end_training()
+        accelerator.print(f"oi")
+    accelerator.end_training()
     return model
 
 if __name__ == '__main__':
