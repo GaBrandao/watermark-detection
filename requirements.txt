@@ -1,6 +1,6 @@
-matplotlib==3.8.4
-numpy==2.0.0rc1
-tensorboard==2.16.2
-tqdm==4.66.2
+matplotlib
+tensorboard
+tqdm
 accelerate
 transformers
+jupyterlab
