@@ -6,8 +6,10 @@ requirements:
 	pip3 install torch~=2.3.0 torch_xla[tpu]~=2.3.0 torchvision -f https://storage.googleapis.com/libtpu-releases/index.html
 	pip3 install -r requirements.txt
 
-env:
-	rm -r env
+env: 
+	if [-d "/env"]; then \
+		rm -r env; \
+	fi
 	apt install python3.8-dev python3.8-venv
 	python3 -m venv env
 	source env/bin/activate
