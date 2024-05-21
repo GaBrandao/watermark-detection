@@ -65,6 +65,8 @@ def train_model(model, args):
 
     progress_bar = tqdm(range(epochs * len(train_loader)))
 
+    device = accelerator.device
+
     for epoch in range(epochs):
         model.train() 
         
@@ -87,7 +89,7 @@ def train_model(model, args):
             with torch.no_grad():
                 images, labels = batch
                 pred = model(images)
-            loss = loss_func(pred, labels.float())
+            loss = loss_func(pred, labels.float()).to(device)
             loss = accelerator.gather_for_metrics(loss.item())
 
             accelerator.log({f'model_{model_name}/valid_loss': loss}, step=iter)
