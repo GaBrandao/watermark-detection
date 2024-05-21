@@ -1,4 +1,4 @@
-all: env requirements dataset 
+all: venv requirements dataset 
 	export PATH="/home/gabrielalmeida/.local/bin:$PATH"
 	export PJRT_DEVICE=TPU
 
@@ -7,8 +7,8 @@ venv:
 	python3 -m venv venv
 
 requirements: venv requirements.txt
-	. env/bin/activate; pip3 install torch~=2.3.0 torch_xla[tpu]~=2.3.0 torchvision -f https://storage.googleapis.com/libtpu-releases/index.html
-	. env/bin/activate; pip3 install -r requirements.txt
+	. venv/bin/activate; pip3 install torch~=2.3.0 torch_xla[tpu]~=2.3.0 torchvision -f https://storage.googleapis.com/libtpu-releases/index.html
+	. venv/bin/activate; pip3 install -r requirements.txt
 
 dataset:
 	mkdir dataset
