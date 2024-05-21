@@ -92,7 +92,7 @@ def train_model(model, args):
             loss = loss_func(pred, labels.float()).to(device)
             loss = accelerator.gather_for_metrics(loss.item())
 
-            accelerator.log({f'valid_loss': loss}, step=iter)
+            accelerator.log({'valid_loss': loss}, step=iter)
         
     accelerator.end_training()
     return model
