@@ -14,38 +14,33 @@ class NaiveModel(nn.Module):
 
         self.hparam = hparams
 
-        self.model = nn.Sequential(
-            nn.Conv2d(3, 32, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(128, 256, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(256, 512, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(512, 512, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
+        self.layer1 = nn.Sequential(nn.Conv2d(3, 96, 11, stride=4), nn.ReLU(), nn.MaxPool2d(3, stride=2))
+        
+        self.layer2 = nn.Sequential(nn.Conv2d(96, 256, 5, padding=2), nn.ReLU(), nn.MaxPool2d(3, stride=2))
+
+        self.layer3 = nn.Sequential(nn.Conv2d(256, 384, 3, padding=1), nn.ReLU())#, nn.MaxPool2d(2))
+
+        self.layer4 = nn.Sequential(nn.Conv2d(384, 384, 3), nn.ReLU())#, nn.MaxPool2d(2))
+            
+        self.layer5 = nn.Sequential(nn.Conv2d(384, 256, 3), nn.ReLU(), nn.MaxPool2d(3, stride=2))
+        
+        self.layer6 = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(4608, 1024),
+            nn.Linear(9216, 2048),
             nn.ReLU(),
-            nn.Linear(1024, 256),
+            nn.Linear(2048, 512),
             nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Linear(128, 1),
+            nn.Linear(512, 1),
             nn.Sigmoid()
         )
 
     def forward(self, x):
-        x = self.model(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        x = self.layer6(x)
         return x.view(-1)
     
     def general_step(self, batch, loss_func):
