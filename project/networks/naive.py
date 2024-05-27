@@ -15,31 +15,32 @@ class NaiveModel(nn.Module):
         self.hparam = hparams
 
         self.model = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(3, 32, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(128, 256, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(256, 512, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(512, 512, kernel_size=3, groups=512),
+            nn.MaxPool2d(2),
+            nn.Conv2d(512, 512, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(512, 2048, kernel_size=1),
+            nn.MaxPool2d(2),
+            nn.Flatten(),
+            nn.Linear(4608, 1024),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(2048, 1024, kernel_size=1),
+            nn.Linear(1024, 256),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(1024, 1, kernel_size=1),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, 1),
             nn.Sigmoid()
         )
 
@@ -47,16 +48,16 @@ class NaiveModel(nn.Module):
         x = self.model(x)
         return x.view(-1)
     
-    def general_step(self, batch, batch_idx, mode):
+    def general_step(self, batch, loss_func):
         images, targets = batch
 
         # forward pass
         out = self.forward(images)
 
         # loss
-        loss = self.loss(out, targets)
+        loss = loss_func(out, targets.float())
 
-        preds = out.argmax(axis=1)
+        preds = (out.detach().cpu().numpy()) > 0.5
         n_correct = (targets == preds).sum()
         n_total = len(targets)
         return loss, n_correct, n_total
