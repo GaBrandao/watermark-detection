@@ -98,7 +98,7 @@ class NaiveModel(nn.Module):
 
         for batch in tqdm(dataloader):
             X, y = batch
-            X = X.to(self.device)
+            X = X.to(self.hparams['device'])
             score = self.forward(X)
             scores.append(score.detach().cpu().numpy())
             labels.append(y.detach().cpu().numpy())
