@@ -4,6 +4,45 @@ import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 
+class SimpleCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+
+        self.layer1 = nn.Sequential(nn.Conv2d(3, 32, 3), nn.ReLU(), nn.MaxPool2d(2))
+
+        self.layer2 = nn.Sequential(nn.Conv2d(32, 64, 3), nn.ReLU(), nn.MaxPool2d(2))
+
+        self.layer3 = nn.Sequential(nn.Conv2d(64, 64, 3), nn.ReLU(), nn.MaxPool2d(2))
+        
+        self.layer4 = nn.Sequential(nn.Conv2d(64, 128, 3), nn.ReLU(), nn.MaxPool2d(2))
+
+        self.layer5 = nn.Sequential(nn.Conv2d(128, 64, 3), nn.ReLU(), nn.MaxPool2d(2))
+
+        # self.layer6 = nn.Sequential(nn.Conv2d(64, 32, 3), nn.ReLU(), nn.MaxPool2d(2))
+
+
+        self.layer7 = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(4096, 2048),
+            nn.Dropout(0.5),
+            nn.ReLU(),
+            nn.Linear(2048, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 2),
+            nn.Softmax(dim=1)
+        )
+        
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        # x = self.layer6(x)
+        x = self.layer7(x)
+
+        return x
 
 class NaiveModel(nn.Module):
     """
@@ -41,7 +80,7 @@ class NaiveModel(nn.Module):
         x = self.layer4(x)
         x = self.layer5(x)
         x = self.layer6(x)
-        return x.view(-1)
+        return x
     
     def general_step(self, batch, loss_func):
         images, targets = batch
@@ -86,7 +125,7 @@ class NaiveModel(nn.Module):
         return {'val_loss': avg_loss, 'val_acc': acc}
 
     def get_accuracy(self, dataloader):
-        self.model.eval()
+        self.eval()
 
         scores = []
         labels = []

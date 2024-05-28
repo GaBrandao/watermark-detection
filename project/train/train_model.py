@@ -11,7 +11,7 @@ def train_model(model, data_module, loss_func, optimizer, hparams, scheduler=Non
     train_loader = data_module.get_loader('train')
     valid_loader = data_module.get_loader('valid')
 
-    device = torch.device('mps') if torch.backends.mps.is_available() else 'cpu'
+    device = hparams['device']
 
     model.to(device)
 
@@ -34,7 +34,7 @@ def train_model(model, data_module, loss_func, optimizer, hparams, scheduler=Non
             images, labels = images.to(device), labels.to(device)
 
             pred = model(images) 
-            loss = loss_func(pred, labels.float())
+            loss = loss_func(pred, labels.unsqueeze(1).float())
             
             loss.backward()  
             optimizer.step() 
@@ -49,7 +49,8 @@ def train_model(model, data_module, loss_func, optimizer, hparams, scheduler=Non
                                       lr = "{:.8f}".format(optimizer.param_groups[0]['lr'])
             )
 
-            logger.add_scalar(f'classifier_{model_name}/train_loss', loss.item(), epoch * len(train_loader) + iter)
+            if logger is not None:
+                logger.add_scalar(f'classifier_{model_name}/train_loss', loss.item(), epoch * len(train_loader) + iter)
 
         model.eval()
         valid_loop = create_tqdm_bar(valid_loader, desc=f'Validation Epoch [{epoch + 1}/{hparams["epochs"]}]')
@@ -62,9 +63,10 @@ def train_model(model, data_module, loss_func, optimizer, hparams, scheduler=Non
                 images, labels = images.to(device), labels.to(device)
 
                 pred = model(images)
-                loss = loss_func(pred, labels.float())
+                loss = loss_func(pred, labels.unsqueeze(1).float())
                 validation_loss.append(loss.item())
 
                 valid_loop.set_postfix(valid_loss = "{:.8f}".format(np.mean(validation_loss)))
 
-                logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + iter)            
+                if logger is not None:
+                    logger.add_scalar(f'classifier_{model_name}/val_loss', loss.item(), epoch * len(valid_loader) + iter)            

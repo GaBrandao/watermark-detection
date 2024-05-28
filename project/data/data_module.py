@@ -5,9 +5,7 @@ import torchvision
 
 from project.data.memory_dataset import MemoryDataset
 
-import numpy as np
 import os
-
 from .settings import TRAIN_MEAN, TRAIN_STD
 
 class DataModule(nn.Module):
@@ -18,7 +16,6 @@ class DataModule(nn.Module):
             self.opt['num_workers'] = 8
         if 'load_method' not in hparams.keys():
             self.opt['load_method'] = 'image'
-        self.prepare_data()
 
     def prepare_data(self, ROOT="dataset", transforms: torchvision.transforms.Compose = None):
         if transforms == None:
